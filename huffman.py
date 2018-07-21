@@ -1,4 +1,4 @@
-import operator, logging, json, struct, argparse, sys
+import operator, logging, json, struct, argparse, sys, mimetypes
 from bisect import bisect_left
 from time import time
 from collections import defaultdict
@@ -7,6 +7,9 @@ from bitarray import bitarray
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+textchars = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
+is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
 
 
 def timethis(f):
@@ -44,6 +47,10 @@ class Huffman(object):
 			self.output_file = input_file.split('.')[0] + '.bin'
 		except:
 			self.output_file = input_file + '.bin'
+
+		if is_binary_string(open(input_file, 'rb').read(1024)):
+			print 'Input file should by plain text!'
+			sys.exit(0)
 
 		with open(input_file, 'r') as open_file:
 			self.text = open_file.read()
@@ -138,6 +145,10 @@ class Huffman(object):
 
 		self.length_string = ''
 		self.zeros_string = ''
+
+		if not is_binary_string(open(file_in, 'rb').read(1024)):
+			print 'Input file should binary string!'
+			sys.exit(0)
 
 		with open(file_in, 'rb') as open_file:
 			for i in range(4):
